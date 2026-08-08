@@ -274,24 +274,10 @@
     </main>
   </div>
 
-  <!-- Toast: esta demo cubre únicamente la Pantalla 1 (Bienvenida) -->
-  <div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3">
-    <div id="scopeToast" class="toast align-items-center text-bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body">
-          Esta demo cubre solo la Pantalla 1 (Bienvenida) del FRD. La selección de servicio vive en el flujo de WhatsApp.
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
-      </div>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     document.getElementById('startBtn').addEventListener('click', function () {
-      var toastEl = document.getElementById('scopeToast');
-      var toast = new bootstrap.Toast(toastEl);
-      toast.show();
+      window.location.href = 'seleccion-servicio.html';
     });
   </script>
 </body>
