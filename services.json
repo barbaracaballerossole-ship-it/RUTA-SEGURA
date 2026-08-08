@@ -1,0 +1,26 @@
+[
+  {
+    "id": "grua",
+    "name": "Grúa",
+    "icon": "🚛",
+    "price": 250
+  },
+  {
+    "id": "llanta",
+    "name": "Cambio de llanta",
+    "icon": "🛞",
+    "price": 150
+  },
+  {
+    "id": "bateria",
+    "name": "Paso de corriente",
+    "icon": "🔋",
+    "price": 120
+  },
+  {
+    "id": "cerrajeria",
+    "name": "Cerrajería",
+    "icon": "🔑",
+    "price": 180
+  }
+]
