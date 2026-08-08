@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruta Segura — Bienvenida</title>
+  <meta name="description" content="Asistencia vial en Guatemala vía WhatsApp. Grúa, cambio de llanta, paso de corriente y cerrajería con precio fijo.">
+
+  <!-- Google Fonts: Poppins (headings) + Open Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --rs-primary: #0B3954;
+      --rs-accent: #087E8B;
+      --rs-bg: #F7F7F2;
+    }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background-color: var(--rs-bg);
+      color: var(--rs-primary);
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, .brand-font {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* Full-viewport wrapper that centers the "phone" mockup */
+    .stage {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .phone-frame {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 20px 50px rgba(11, 57, 84, 0.18);
+      overflow: hidden;
+      border: 1px solid rgba(11, 57, 84, 0.08);
+    }
+
+    .phone-header {
+      background: var(--rs-primary);
+      color: #fff;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--rs-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .phone-header .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ADE80;
+      display: inline-block;
+      margin-right: 0.35rem;
+    }
+
+    .phone-body {
+      padding: 1.5rem;
+      background: var(--rs-bg);
+    }
+
+    /* Chat bubble */
+    .chat-bubble {
+      background: #fff;
+      border-radius: 16px 16px 16px 4px;
+      padding: 1rem 1.15rem;
+      box-shadow: 0 2px 6px rgba(11, 57, 84, 0.08);
+      max-width: 92%;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .chat-bubble p {
+      margin-bottom: 0.5rem;
+      line-height: 1.5;
+    }
+
+    .chat-bubble p:last-child {
+      margin-bottom: 0;
+    }
+
+    .chat-timestamp {
+      font-size: 0.72rem;
+      color: #8a97a1;
+      margin-top: 0.4rem;
+      text-align: right;
+    }
+
+    /* Service chips preview */
+    .service-chip {
+      background: #fff;
+      border: 1px solid rgba(11, 57, 84, 0.1);
+      border-radius: 12px;
+      padding: 0.65rem 0.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--rs-primary);
+    }
+
+    .service-chip .chip-icon {
+      font-size: 1.3rem;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Auto-detected identifier row */
+    .identity-row {
+      background: rgba(8, 126, 139, 0.08);
+      border: 1px dashed var(--rs-accent);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--rs-primary);
+    }
+
+    .identity-row .bi-icon {
+      font-size: 1.1rem;
+      color: var(--rs-accent);
+      flex-shrink: 0;
+    }
+
+    .btn-rs-accent {
+      background-color: var(--rs-accent);
+      border-color: var(--rs-accent);
+      color: #fff;
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+    }
+
+    .btn-rs-accent:hover,
+    .btn-rs-accent:focus {
+      background-color: #066b76;
+      border-color: #066b76;
+      color: #fff;
+    }
+
+    .footer-note {
+      font-size: 0.75rem;
+      color: #6b7a84;
+      text-align: center;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Typing indicator */
+    .typing-dots span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--rs-accent);
+      margin-right: 3px;
+      animation: blink 1.4s infinite both;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.2; }
+      40% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stage">
+    <main class="phone-frame" aria-label="Pantalla de bienvenida de Ruta Segura">
+
+      <!-- Header: identidad de marca -->
+      <header class="phone-header">
+        <div class="brand-logo" aria-hidden="true">RS</div>
+        <div>
+          <h1 class="h6 mb-0 brand-font">Ruta Segura</h1>
+          <small><span class="status-dot" aria-hidden="true"></span>Asistencia vial · en línea</small>
+        </div>
+      </header>
+
+      <!-- Cuerpo: mensaje de bienvenida estilo chat -->
+      <div class="phone-body">
+
+        <div class="chat-bubble mb-3">
+          <p><strong>Hola 👋, bienvenido a Ruta Segura.</strong></p>
+          <p>Te ayudamos a resolver tu emergencia vial en minutos: grúa, cambio de llanta, paso de corriente o cerrajería, con precio fijo y sin sorpresas.</p>
+          <p class="mb-0">¿Qué servicio necesitas?</p>
+          <div class="chat-timestamp">Ruta Segura Bot</div>
+        </div>
+
+        <div class="typing-dots mb-4 ps-1" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+
+        <!-- Vista previa de los 4 servicios (informativa, sin navegación) -->
+        <div class="row row-cols-4 g-2 mb-4">
+          <div class="col">
+            <div class="service-chip">
+              <span class="chip-icon">🚛</span>Grúa
+            </div>
+          </div>
+          <div class="col">
+            <div class="service-chip">
+              <span class="chip-icon">🛞</span>Llanta
+            </div>
+          </div>
+          <div class="col">
+            <div class="service-chip">
+              <span class="chip-icon">🔋</span>Batería
+            </div>
+          </div>
+          <div class="col">
+            <div class="service-chip">
+              <span class="chip-icon">🔑</span>Cerrajería
+            </div>
+          </div>
+        </div>
+
+        <!-- Identificación automática por número de WhatsApp -->
+        <div class="identity-row mb-4">
+          <span class="bi-icon" aria-hidden="true">📱</span>
+          <div>
+            Te identificamos automáticamente con tu número de WhatsApp
+            <strong>+502 5555-••••</strong>. No necesitas crear una cuenta.
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="d-grid mb-3">
+          <button type="button" class="btn btn-rs-accent" id="startBtn">
+            Comenzar
+          </button>
+        </div>
+
+        <p class="footer-note mb-0">
+          Pago por evento · Sin letra pequeña · Un operador confirma tu pago antes de despachar
+        </p>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast: esta demo cubre únicamente la Pantalla 1 (Bienvenida) -->
+  <div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3">
+    <div id="scopeToast" class="toast align-items-center text-bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          Esta demo cubre solo la Pantalla 1 (Bienvenida) del FRD. La selección de servicio vive en el flujo de WhatsApp.
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('startBtn').addEventListener('click', function () {
+      var toastEl = document.getElementById('scopeToast');
+      var toast = new bootstrap.Toast(toastEl);
+      toast.show();
+    });
+  </script>
+</body>
+</html>
