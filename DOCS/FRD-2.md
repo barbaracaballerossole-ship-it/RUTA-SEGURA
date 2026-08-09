@@ -9,7 +9,16 @@ confirmación de pago, conforme al nuevo scope comercial directo (ver
 **pago por evento**: cada solicitud se paga por separado mediante un link
 de pago genérico o transferencia, sin conexión directa a una pasarela de
 pago.
-
+**Actualizado (D2, 9 de agosto de 2026):** el prototipo web de D2 implementa
+el flujo completo de las Pantallas 1 a 5 sin integración real de WhatsApp.
+Dos adaptaciones respecto al FRD original: la Pantalla 3 usa un campo de
+texto libre de dirección en vez del pin GPS nativo de WhatsApp (ver 3.1,
+que ya contemplaba este camino como fallback), y la Pantalla 4 solicita
+banco y número de transacción como campos estructurados en vez de solo un
+botón "Ya pagué", para que la validación del operador tenga datos
+concretos que revisar. El resto del flujo (selección de servicio,
+cotización, confirmación, generación de folio) sigue la especificación
+original sin cambios.
 ## 1. Feature seleccionada
 
 Del venture **Ruta Segura** se elige el feature #1: **Bot de WhatsApp de
