@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruta Segura — Solicitud de servicio</title>
+  <meta name="description" content="Solicita tu servicio de asistencia vial: teléfono, servicio, dirección y comprobante de pago.">
+
+  <!-- Google Fonts: Poppins (headings) + Open Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --rs-primary: #0B3954;
+      --rs-accent: #087E8B;
+      --rs-bg: #F7F7F2;
+    }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background-color: var(--rs-bg);
+      color: var(--rs-primary);
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, .brand-font {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* Full-viewport wrapper that centers the "phone" mockup */
+    .stage {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .phone-frame {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 20px 50px rgba(11, 57, 84, 0.18);
+      overflow: hidden;
+      border: 1px solid rgba(11, 57, 84, 0.08);
+    }
+
+    .phone-header {
+      background: var(--rs-primary);
+      color: #fff;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--rs-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .phone-header .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ADE80;
+      display: inline-block;
+      margin-right: 0.35rem;
+    }
+
+    .phone-body {
+      padding: 1.5rem;
+      background: var(--rs-bg);
+    }
+
+    /* Chat bubble */
+    .chat-bubble {
+      background: #fff;
+      border-radius: 16px 16px 16px 4px;
+      padding: 1rem 1.15rem;
+      box-shadow: 0 2px 6px rgba(11, 57, 84, 0.08);
+      max-width: 92%;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .chat-bubble p {
+      margin-bottom: 0.5rem;
+      line-height: 1.5;
+    }
+
+    .chat-bubble p:last-child {
+      margin-bottom: 0;
+    }
+
+    .chat-timestamp {
+      font-size: 0.72rem;
+      color: #8a97a1;
+      margin-top: 0.4rem;
+      text-align: right;
+    }
+
+    .form-card {
+      background: #fff;
+      border: 1px solid rgba(11, 57, 84, 0.12);
+      border-radius: 14px;
+      padding: 1.15rem;
+    }
+
+    .form-label {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .form-control,
+    .form-select {
+      border-radius: 10px;
+      border: 1px solid rgba(11, 57, 84, 0.2);
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: var(--rs-accent);
+      box-shadow: 0 0 0 0.2rem rgba(8, 126, 139, 0.15);
+    }
+
+    .btn-rs-accent {
+      background-color: var(--rs-accent);
+      border-color: var(--rs-accent);
+      color: #fff;
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+    }
+
+    .btn-rs-accent:hover,
+    .btn-rs-accent:focus {
+      background-color: #066b76;
+      border-color: #066b76;
+      color: #fff;
+    }
+
+    .btn-rs-accent:disabled {
+      opacity: 0.65;
+    }
+
+    .btn-rs-outline {
+      background-color: transparent;
+      border: 1px solid rgba(11, 57, 84, 0.25);
+      color: var(--rs-primary);
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-rs-outline:hover,
+    .btn-rs-outline:focus {
+      background-color: rgba(11, 57, 84, 0.05);
+      color: var(--rs-primary);
+    }
+
+    .footer-note {
+      font-size: 0.75rem;
+      color: #6b7a84;
+      text-align: center;
+    }
+
+    /* Estado de éxito */
+    .status-card {
+      background: #fff;
+      border: 1px solid rgba(11, 57, 84, 0.12);
+      border-radius: 14px;
+      padding: 1.25rem 1.15rem;
+      text-align: center;
+    }
+
+    .status-check {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(8, 126, 139, 0.12);
+      color: var(--rs-accent);
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.85rem;
+    }
+
+    /* Estado de error */
+    .error-box {
+      background: rgba(220, 53, 69, 0.08);
+      border: 1px solid rgba(220, 53, 69, 0.35);
+      color: #a02330;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      font-size: 0.85rem;
+      word-break: break-word;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stage">
+    <main class="phone-frame" aria-label="Pantalla de solicitud de servicio de Ruta Segura">
+
+      <!-- Header: identidad de marca -->
+      <header class="phone-header">
+        <div class="brand-logo" aria-hidden="true">RS</div>
+        <div>
+          <h1 class="h6 mb-0 brand-font">Ruta Segura</h1>
+          <small><span class="status-dot" aria-hidden="true"></span>Asistencia vial · en línea</small>
+        </div>
+      </header>
+
+      <!-- Cuerpo -->
+      <div class="phone-body">
+
+        <div class="chat-bubble mb-3">
+          <p class="mb-0">Completa los datos de tu solicitud y tu comprobante de pago. Un operador te asignará el proveedor más cercano.</p>
+          <div class="chat-timestamp">Ruta Segura Bot</div>
+        </div>
+
+        <!-- Formulario de solicitud -->
+        <form id="solicitudForm" class="form-card mb-3" novalidate>
+
+          <div class="mb-3">
+            <label for="telefono" class="form-label">Número de WhatsApp</label>
+            <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+502 5555-5555" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="servicio" class="form-label">Servicio</label>
+            <select class="form-select" id="servicio" name="servicio" required>
+              <option value="" selected disabled>Selecciona un servicio…</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="direccion" class="form-label">Dirección / ubicación</label>
+            <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Ej. 5ta avenida, zona 10, Ciudad de Guatemala" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="banco" class="form-label">Banco</label>
+            <input type="text" class="form-control" id="banco" name="banco" placeholder="Ej. Banco Industrial" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="numero_transaccion" class="form-label">Número de transacción</label>
+            <input type="text" class="form-control" id="numero_transaccion" name="numero_transaccion" placeholder="Ej. 123456789" required>
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" class="btn btn-rs-accent" id="submitBtn">
+              Enviar solicitud
+            </button>
+          </div>
+        </form>
+
+        <!-- Estado de éxito (oculto hasta que se guarde correctamente) -->
+        <div id="successCard" class="status-card mb-3 d-none">
+          <div class="status-check" aria-hidden="true">&#10003;</div>
+          <h2 class="h6 mb-2">¡Gracias! Tu solicitud fue recibida.</h2>
+          <p class="mb-0" style="font-size: 0.85rem;">Un operador te asignará el proveedor más cercano en breve.</p>
+        </div>
+
+        <!-- Estado de error (oculto hasta que ocurra un fallo al guardar) -->
+        <div id="errorBox" class="error-box mb-3 d-none" role="alert"></div>
+
+        <p class="footer-note mb-0">
+          Pago por evento · Sin letra pequeña · Un operador confirma tu pago antes de despachar
+        </p>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://awidrebfaiqmiqfwzclk.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_rIuEat_NLLIKdo7jEsWM1A_zVW0Jggb';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const form = document.getElementById('solicitudForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successCard = document.getElementById('successCard');
+    const errorBox = document.getElementById('errorBox');
+    const servicioSelect = document.getElementById('servicio');
+
+    // Llena el select de servicios desde el JSON local (mismo catálogo que el resto del flujo)
+    fetch('services.json')
+      .then(function (res) { return res.json(); })
+      .then(function (services) {
+        services.forEach(function (s) {
+          const opt = document.createElement('option');
+          opt.value = s.name;
+          opt.textContent = s.icon + ' ' + s.name;
+          servicioSelect.appendChild(opt);
+        });
+      })
+      .catch(function () {
+        // Si el catálogo no carga, se deja el select con las opciones por defecto (vacío)
+      });
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      errorBox.classList.add('d-none');
+      successCard.classList.add('d-none');
+
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const payload = {
+        telefono: document.getElementById('telefono').value.trim(),
+        servicio: document.getElementById('servicio').value,
+        direccion: document.getElementById('direccion').value.trim(),
+        banco: document.getElementById('banco').value.trim(),
+        numero_transaccion: document.getElementById('numero_transaccion').value.trim()
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando…';
+
+      const { error } = await supabase
+        .from('solicitudes_servicio')
+        .insert([payload]);
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Enviar solicitud';
+
+      if (error) {
+        errorBox.textContent = error.message || String(error);
+        errorBox.classList.remove('d-none');
+        return;
+      }
+
+      form.classList.add('d-none');
+      successCard.classList.remove('d-none');
+    });
+  </script>
+</body>
+</html>
