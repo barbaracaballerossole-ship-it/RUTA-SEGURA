@@ -19,6 +19,19 @@ botón "Ya pagué", para que la validación del operador tenga datos
 concretos que revisar. El resto del flujo (selección de servicio,
 cotización, confirmación, generación de folio) sigue la especificación
 original sin cambios.
+**Actualizado (D3, 23 de agosto de 2026):** el prototipo deja de ser una
+simulación visual sin backend. La Pantalla 4 (Cobro y confirmación de pago)
+ahora inserta de verdad la solicitud en la tabla `solicitudes_servicio` de
+Supabase, con las mismas 5 columnas ya documentadas (`telefono, servicio,
+direccion, banco, numero_transaccion`), sin cambios de esquema. La
+Pantalla 5 (Confirmación y envío a despacho) ya no genera un folio al azar
+en pantalla: muestra un folio real (`RS-XXXXXXXX`), generado en el
+navegador con `crypto.randomUUID()` justo antes del insert, y solo se
+llega a esa pantalla si el insert fue exitoso — si falla, la Pantalla 4
+muestra el error y no avanza. El folio no se guarda como columna en
+Supabase (para no requerir una política de lectura pública sobre la
+tabla), así que el vínculo entre el folio mostrado y la fila insertada
+vive únicamente en el navegador de esa sesión, no en la base de datos.
 ## 1. Feature seleccionada
 
 Del venture **Ruta Segura** se elige el feature #1: **Bot de WhatsApp de
