@@ -6,6 +6,8 @@
   <title>Ruta Segura — Confirmación final</title>
   <meta name="description" content="Tu pago fue confirmado. Estamos buscando el proveedor más cercano para tu servicio.">
 
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+
   <!-- Google Fonts: Poppins (headings) + Open Sans (body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,14 +66,7 @@
       width: 42px;
       height: 42px;
       border-radius: 50%;
-      background: var(--rs-accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 700;
-      font-size: 1rem;
-      color: #fff;
+      object-fit: cover;
       flex-shrink: 0;
     }
 
@@ -215,7 +210,7 @@
 
       <!-- Header: identidad de marca (pantalla final, sin regreso) -->
       <header class="phone-header">
-        <div class="brand-logo" aria-hidden="true">RS</div>
+        <img src="assets/logo.png" alt="Ruta Segura" class="brand-logo">
         <div>
           <h1 class="h6 mb-0 brand-font">Ruta Segura</h1>
           <small><span class="status-dot" aria-hidden="true"></span>Asistencia vial · en línea</small>
