@@ -203,6 +203,17 @@
       display: none !important;
     }
 
+    /* Error de envío (mismo estilo que solicitud.html) */
+    .error-box {
+      background: rgba(220, 53, 69, 0.08);
+      border: 1px solid rgba(220, 53, 69, 0.35);
+      color: #a02330;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      font-size: 0.85rem;
+      word-break: break-word;
+    }
+
     /* Typing indicator (reutilizado como indicador de validación) */
     .typing-dots span {
       display: inline-block;
@@ -290,6 +301,9 @@
           </div>
         </div>
 
+        <!-- Error de envío (oculto hasta que falle el guardado en Supabase) -->
+        <div id="errorBox" class="error-box mb-3 d-none" role="alert"></div>
+
         <p class="footer-note mb-0">
           Pago por evento · Sin letra pequeña · Un operador confirma tu pago antes de despachar
         </p>
@@ -299,7 +313,14 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    // Mismo proyecto y publishable key que usa solicitud.html
+    const SUPABASE_URL = 'https://awidrebfaiqmiqfwzclk.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_rIuEat_NLLIKdo7jEsWM1A_zVW0Jggb';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
     var FALLBACK_SERVICE = { id: 'llanta', name: 'Cambio de llanta', icon: '🛞', price: 150 };
 
     function getSelectedService() {
@@ -312,6 +333,28 @@
       return FALLBACK_SERVICE;
     }
 
+    function getStored(key) {
+      try {
+        return localStorage.getItem(key) || '';
+      } catch (e) {
+        return '';
+      }
+    }
+
+    // Folio único generado en el navegador, sin depender de leer de vuelta
+    // la fila insertada en Supabase (eso requeriría una política de SELECT
+    // pública sobre la tabla, exponiendo teléfonos y direcciones de todos).
+    function generateFolio() {
+      try {
+        if (window.crypto && typeof crypto.randomUUID === 'function') {
+          return 'RS-' + crypto.randomUUID().split('-')[0].toUpperCase();
+        }
+      } catch (e) {
+        // crypto.randomUUID no disponible (contexto no seguro o navegador viejo): usamos el respaldo
+      }
+      return 'RS-' + Date.now().toString(36).toUpperCase();
+    }
+
     var service = getSelectedService();
     document.getElementById('payAmount').textContent = 'Q' + service.price;
 
@@ -319,30 +362,60 @@
     var validatingSection = document.getElementById('validatingSection');
     var paymentForm = document.getElementById('paymentForm');
     var submitPaymentBtn = document.getElementById('submitPaymentBtn');
+    var errorBox = document.getElementById('errorBox');
 
-    paymentForm.addEventListener('submit', function (e) {
+    paymentForm.addEventListener('submit', async function (e) {
       e.preventDefault();
+      errorBox.classList.add('d-none');
 
       var bank = document.getElementById('bankSelect').value;
       var transaction = document.getElementById('transactionInput').value.trim();
       if (!bank || !transaction) { return; }
-
-      try {
-        localStorage.setItem('rs_bank', bank);
-        localStorage.setItem('rs_transaction', transaction);
-      } catch (err) {
-        // localStorage no disponible: continuamos igual
-      }
 
       submitPaymentBtn.disabled = true;
       paymentFormSection.classList.add('d-none');
       validatingSection.classList.remove('d-none');
       validatingSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-      // Simula la validación del operador antes de avanzar
-      setTimeout(function () {
-        window.location.href = 'confirmacion-final.html';
-      }, 1800);
+      // El folio se genera aquí, antes de insertar: es único por solicitud
+      // y no depende de leer de vuelta la fila de Supabase.
+      var folio = generateFolio();
+
+      // Inserta la solicitud real en Supabase (tabla solicitudes_servicio,
+      // las mismas 5 columnas que ya usa solicitud.html; sin .select(), para
+      // no requerir permiso de lectura pública sobre la tabla)
+      var payload = {
+        telefono: getStored('rs_telefono'),
+        servicio: service.name,
+        direccion: getStored('rs_address'),
+        banco: bank,
+        numero_transaccion: transaction
+      };
+
+      var result = await supabase
+        .from('solicitudes_servicio')
+        .insert([payload]);
+
+      var error = result.error;
+
+      if (error) {
+        submitPaymentBtn.disabled = false;
+        validatingSection.classList.add('d-none');
+        paymentFormSection.classList.remove('d-none');
+        errorBox.textContent = error.message || 'No pudimos guardar tu solicitud. Intenta de nuevo.';
+        errorBox.classList.remove('d-none');
+        errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
+
+      // El insert fue exitoso: guardamos el folio para mostrarlo en la siguiente pantalla
+      try {
+        localStorage.setItem('rs_folio', folio);
+      } catch (err) {
+        // localStorage no disponible: confirmacion-final.html mostrará un estado de error
+      }
+
+      window.location.href = 'confirmacion-final.html';
     });
   </script>
 </body>

@@ -173,6 +173,17 @@
       text-align: center;
     }
 
+    /* Error: no se encontró un folio real de una solicitud recién pagada */
+    .error-box {
+      background: rgba(220, 53, 69, 0.08);
+      border: 1px solid rgba(220, 53, 69, 0.35);
+      color: #a02330;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      font-size: 0.85rem;
+      word-break: break-word;
+    }
+
     /* Typing indicator (reutilizado como "buscando proveedor") */
     .typing-dots span {
       display: inline-block;
@@ -214,18 +225,31 @@
       <!-- Cuerpo: confirmación de pago y folio, estilo chat -->
       <div class="phone-body">
 
-        <div class="status-card mb-3">
-          <div class="status-check" aria-hidden="true">&#10003;</div>
-          <div id="folio" class="folio-badge">RS-00000</div>
+        <!-- Éxito: folio real, generado en pago.html justo antes de insertar en Supabase -->
+        <div id="successSection">
+          <div class="status-card mb-3">
+            <div class="status-check" aria-hidden="true">&#10003;</div>
+            <div id="folio" class="folio-badge"></div>
+          </div>
+
+          <div class="chat-bubble mb-3">
+            <p class="mb-1">Tu pago fue confirmado. Estamos buscando el proveedor más cercano.</p>
+            <p class="mb-0">Tu folio es <strong id="folioInline"></strong>.</p>
+            <div class="typing-dots mt-2" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="chat-timestamp">Ruta Segura Bot</div>
+          </div>
         </div>
 
-        <div class="chat-bubble mb-3">
-          <p class="mb-1">Tu pago fue confirmado. Estamos buscando el proveedor más cercano.</p>
-          <p class="mb-0">Tu folio es <strong id="folioInline">RS-00000</strong>.</p>
-          <div class="typing-dots mt-2" aria-hidden="true">
-            <span></span><span></span><span></span>
+        <!-- Error: se llegó a esta pantalla sin una solicitud recién guardada en Supabase -->
+        <div id="errorSection" class="d-none">
+          <div class="error-box mb-3" role="alert">
+            No encontramos tu solicitud. Vuelve a intentar el pago para generar tu folio.
           </div>
-          <div class="chat-timestamp">Ruta Segura Bot</div>
+          <div class="d-grid mb-3">
+            <a href="pago.html" class="btn btn-rs-accent">Volver a pago</a>
+          </div>
         </div>
 
         <div class="d-grid mb-3">
@@ -242,15 +266,38 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Genera un folio con formato RS-XXXXX (5 dígitos)
-    function generateFolio() {
-      var digits = Math.floor(10000 + Math.random() * 90000);
-      return 'RS-' + digits;
+    function getStored(key) {
+      try {
+        return localStorage.getItem(key) || '';
+      } catch (e) {
+        return '';
+      }
     }
 
-    var folio = generateFolio();
-    document.getElementById('folio').textContent = folio;
-    document.getElementById('folioInline').textContent = folio;
+    // El folio no se genera aquí: es el que pago.html generó y guardó justo
+    // antes de insertar la solicitud en Supabase.
+    var folio = getStored('rs_folio');
+    var successSection = document.getElementById('successSection');
+    var errorSection = document.getElementById('errorSection');
+
+    if (folio) {
+      document.getElementById('folio').textContent = folio;
+      document.getElementById('folioInline').textContent = folio;
+
+      // Ya se mostró el folio: limpiamos el estado de esta solicitud para
+      // que un siguiente pedido no reuse datos de este.
+      try {
+        localStorage.removeItem('rs_folio');
+        localStorage.removeItem('rs_selected_service');
+        localStorage.removeItem('rs_address');
+        localStorage.removeItem('rs_telefono');
+      } catch (e) {
+        // localStorage no disponible: no hay nada que limpiar
+      }
+    } else {
+      successSection.classList.add('d-none');
+      errorSection.classList.remove('d-none');
+    }
   </script>
 </body>
 </html>
