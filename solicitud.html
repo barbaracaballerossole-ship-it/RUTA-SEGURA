@@ -294,13 +294,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-    const SUPABASE_URL = 'https://awidrebfaiqmiqfwzclk.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_rIuEat_NLLIKdo7jEsWM1A_zVW0Jggb';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
+  <script>
     const form = document.getElementById('solicitudForm');
     const submitBtn = document.getElementById('submitBtn');
     const successCard = document.getElementById('successCard');
@@ -309,16 +303,16 @@
 
     // Llena el select de servicios desde el JSON local (mismo catálogo que el resto del flujo)
     fetch('services.json')
-      .then(function (res) { return res.json(); })
-      .then(function (services) {
-        services.forEach(function (s) {
+      .then((res) => res.json())
+      .then((services) => {
+        services.forEach((s) => {
           const opt = document.createElement('option');
           opt.value = s.name;
           opt.textContent = s.icon + ' ' + s.name;
           servicioSelect.appendChild(opt);
         });
       })
-      .catch(function () {
+      .catch(() => {
         // Si el catálogo no carga, se deja el select con las opciones por defecto (vacío)
       });
 
@@ -336,28 +330,37 @@
         telefono: document.getElementById('telefono').value.trim(),
         servicio: document.getElementById('servicio').value,
         direccion: document.getElementById('direccion').value.trim(),
-        banco: document.getElementById('banco').value.trim(),
-        numero_transaccion: document.getElementById('numero_transaccion').value.trim()
+        banco: document.getElementById('banco').value.trim() || null,
+        numero_transaccion: document.getElementById('numero_transaccion').value.trim() || null
       };
 
       submitBtn.disabled = true;
       submitBtn.textContent = 'Enviando…';
 
-      const { error } = await supabase
-        .from('solicitudes_servicio')
-        .insert([payload]);
+      try {
+        const res = await fetch('/api/submit-solicitud', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Enviar solicitud';
+        const data = await res.json().catch(() => ({}));
 
-      if (error) {
-        errorBox.textContent = error.message || String(error);
+        if (!res.ok) {
+          errorBox.textContent = data && data.error ? JSON.stringify(data.error) : JSON.stringify(data);
+          errorBox.classList.remove('d-none');
+          return;
+        }
+
+        form.classList.add('d-none');
+        successCard.classList.remove('d-none');
+      } catch (err) {
+        errorBox.textContent = err && err.message ? err.message : String(err);
         errorBox.classList.remove('d-none');
-        return;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Enviar solicitud';
       }
-
-      form.classList.add('d-none');
-      successCard.classList.remove('d-none');
     });
   </script>
 </body>
