@@ -327,14 +327,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-    // Mismo proyecto y publishable key que usa solicitud.html
-    const SUPABASE_URL = 'https://awidrebfaiqmiqfwzclk.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_rIuEat_NLLIKdo7jEsWM1A_zVW0Jggb';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
+  <script>
     var FALLBACK_SERVICE = { id: 'llanta', name: 'Cambio de llanta', icon: '🛞', price: 150 };
 
     function getSelectedService() {
@@ -355,20 +348,6 @@
       }
     }
 
-    // Folio único generado en el navegador, sin depender de leer de vuelta
-    // la fila insertada en Supabase (eso requeriría una política de SELECT
-    // pública sobre la tabla, exponiendo teléfonos y direcciones de todos).
-    function generateFolio() {
-      try {
-        if (window.crypto && typeof crypto.randomUUID === 'function') {
-          return 'RS-' + crypto.randomUUID().split('-')[0].toUpperCase();
-        }
-      } catch (e) {
-        // crypto.randomUUID no disponible (contexto no seguro o navegador viejo): usamos el respaldo
-      }
-      return 'RS-' + Date.now().toString(36).toUpperCase();
-    }
-
     var service = getSelectedService();
     document.getElementById('payAmount').textContent = 'Q' + service.price;
 
@@ -385,9 +364,19 @@
         localStorage.removeItem('rs_address');
         localStorage.removeItem('rs_telefono');
         localStorage.removeItem('rs_folio');
+        localStorage.removeItem('rs_estado');
       } catch (e) {
         // localStorage no disponible: no hay nada que limpiar
       }
+    }
+
+    function showPaymentError(message) {
+      submitPaymentBtn.disabled = false;
+      validatingSection.classList.add('d-none');
+      paymentFormSection.classList.remove('d-none');
+      errorBox.textContent = message;
+      errorBox.classList.remove('d-none');
+      errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     // Timeout de 20 minutos sin confirmar el pago: el caso se marca como
@@ -453,44 +442,43 @@
       validatingSection.classList.remove('d-none');
       validatingSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-      // El folio se genera aquí, antes de insertar: es único por solicitud
-      // y no depende de leer de vuelta la fila de Supabase.
-      var folio = generateFolio();
-
-      // Inserta la solicitud real en Supabase (tabla solicitudes_servicio,
-      // las mismas 5 columnas que ya usa solicitud.html; sin .select(), para
-      // no requerir permiso de lectura pública sobre la tabla)
+      // La solicitud se crea en el backend (api/submit-solicitud.mjs): el
+      // folio y el estado los genera y guarda el servidor, no el navegador.
       var payload = {
         telefono: getStored('rs_telefono'),
         servicio: service.name,
         direccion: getStored('rs_address'),
         banco: bank,
-        numero_transaccion: transaction,
-        estado: 'pendiente'
+        numero_transaccion: transaction
       };
 
-      var result = await supabase
-        .from('solicitudes_servicio')
-        .insert([payload]);
+      var data;
+      try {
+        var response = await fetch('/api/submit-solicitud', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-      var error = result.error;
+        data = await response.json().catch(function () { return {}; });
 
-      if (error) {
-        submitPaymentBtn.disabled = false;
-        validatingSection.classList.add('d-none');
-        paymentFormSection.classList.remove('d-none');
-        errorBox.textContent = error.message || 'No pudimos guardar tu solicitud. Intenta de nuevo.';
-        errorBox.classList.remove('d-none');
-        errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (!response.ok) {
+          showPaymentError(data && data.error ? JSON.stringify(data.error) : 'No pudimos guardar tu solicitud. Intenta de nuevo.');
+          return;
+        }
+      } catch (err) {
+        showPaymentError(err && err.message ? err.message : String(err));
         return;
       }
 
       // El insert fue exitoso: ya no aplica el timeout de abandono
       clearTimeout(abandonTimer);
 
-      // guardamos el folio para mostrarlo en la siguiente pantalla
+      // Guardamos el folio y el estado que devolvió el backend — no se
+      // generan ni se vuelven a consultar en el navegador.
       try {
-        localStorage.setItem('rs_folio', folio);
+        localStorage.setItem('rs_folio', data.folio);
+        localStorage.setItem('rs_estado', data.estado);
       } catch (err) {
         // localStorage no disponible: confirmacion-final.html mostrará un estado de error
       }

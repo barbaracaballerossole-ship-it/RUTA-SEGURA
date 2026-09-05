@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -18,13 +20,19 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables' });
     }
 
+    // El folio se genera aquí, en el servidor, no en el navegador: así el
+    // mismo valor que se muestra al usuario es el que queda en la fila.
+    const folio = 'RS-' + randomUUID().split('-')[0].toUpperCase();
+    const estado = 'pendiente';
+
     const payload = {
       telefono,
       servicio,
       direccion,
       banco: banco ?? null,
       numero_transaccion: numero_transaccion ?? null,
-      estado: 'pendiente'
+      estado,
+      folio
     };
 
     const endpoint = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/solicitudes_servicio';
@@ -46,7 +54,16 @@ export default async function handler(req, res) {
       return res.status(resp.status).json({ error: data });
     }
 
-    return res.status(200).json({ success: true, data });
+    // Devolvemos solo folio y estado (no la fila completa, para no exponer
+    // teléfono/dirección en la respuesta); tomamos ambos de la fila que
+    // Supabase realmente guardó, no de las variables locales de arriba.
+    const insertedRow = Array.isArray(data) && data[0] ? data[0] : {};
+
+    return res.status(200).json({
+      success: true,
+      folio: insertedRow.folio ?? folio,
+      estado: insertedRow.estado ?? estado
+    });
   } catch (err) {
     return res.status(500).json({ error: err && err.message ? err.message : String(err) });
   }
