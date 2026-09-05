@@ -193,6 +193,21 @@
       text-align: center;
     }
 
+    .btn-cancel-link {
+      background: none;
+      border: none;
+      color: #a02330;
+      font-size: 0.8rem;
+      text-decoration: underline;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .btn-cancel-link:hover,
+    .btn-cancel-link:focus {
+      color: #7a1a24;
+    }
+
     #paymentFormSection.d-none,
     #validatingSection.d-none {
       display: none !important;
@@ -303,6 +318,10 @@
           Pago por evento · Sin letra pequeña · Un operador confirma tu pago antes de despachar
         </p>
 
+        <div class="text-center mt-2">
+          <button type="button" class="btn-cancel-link" id="cancelBtn">Cancelar solicitud</button>
+        </div>
+
       </div>
     </main>
   </div>
@@ -358,6 +377,68 @@
     var paymentForm = document.getElementById('paymentForm');
     var submitPaymentBtn = document.getElementById('submitPaymentBtn');
     var errorBox = document.getElementById('errorBox');
+    var cancelBtn = document.getElementById('cancelBtn');
+
+    function clearFlowState() {
+      try {
+        localStorage.removeItem('rs_selected_service');
+        localStorage.removeItem('rs_address');
+        localStorage.removeItem('rs_telefono');
+        localStorage.removeItem('rs_folio');
+      } catch (e) {
+        // localStorage no disponible: no hay nada que limpiar
+      }
+    }
+
+    // Timeout de 20 minutos sin confirmar el pago: el caso se marca como
+    // "abandonado" y el flujo se cierra sin generar folio (ver
+    // DOCS/FRD-2.md, 3.2.1). Solo aplica si el usuario no llega a enviar el
+    // formulario de pago dentro de esa ventana.
+    var ABANDON_TIMEOUT_MS = 20 * 60 * 1000;
+    var abandonTimer = setTimeout(async function () {
+      var telefono = getStored('rs_telefono');
+      if (telefono) {
+        try {
+          await fetch('/api/mark-abandoned', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telefono: telefono })
+          });
+        } catch (e) {
+          // Sin conexión o error del servidor: igual cerramos el flujo localmente
+        }
+      }
+
+      clearFlowState();
+      paymentFormSection.classList.add('d-none');
+      validatingSection.classList.add('d-none');
+      cancelBtn.disabled = true;
+      errorBox.textContent = 'Pasaron 20 minutos sin confirmar tu pago. Tu solicitud fue marcada como abandonada.';
+      errorBox.classList.remove('d-none');
+      errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, ABANDON_TIMEOUT_MS);
+
+    // Comando "cancelar", disponible desde Dirección en adelante (ver
+    // DOCS/FRD-2.md, 3.2.3).
+    cancelBtn.addEventListener('click', function () {
+      if (!window.confirm('¿Seguro que quieres cancelar tu solicitud?')) { return; }
+
+      clearTimeout(abandonTimer);
+
+      var telefono = getStored('rs_telefono');
+      if (telefono) {
+        fetch('/api/cancel-solicitud', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telefono: telefono })
+        }).catch(function () {
+          // Sin conexión o error del servidor: no bloquea la cancelación local
+        });
+      }
+
+      clearFlowState();
+      window.location.href = 'index.html';
+    });
 
     paymentForm.addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -384,7 +465,8 @@
         servicio: service.name,
         direccion: getStored('rs_address'),
         banco: bank,
-        numero_transaccion: transaction
+        numero_transaccion: transaction,
+        estado: 'pendiente'
       };
 
       var result = await supabase
@@ -403,7 +485,10 @@
         return;
       }
 
-      // El insert fue exitoso: guardamos el folio para mostrarlo en la siguiente pantalla
+      // El insert fue exitoso: ya no aplica el timeout de abandono
+      clearTimeout(abandonTimer);
+
+      // guardamos el folio para mostrarlo en la siguiente pantalla
       try {
         localStorage.setItem('rs_folio', folio);
       } catch (err) {

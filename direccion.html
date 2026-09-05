@@ -199,6 +199,21 @@
       text-align: center;
     }
 
+    .btn-cancel-link {
+      background: none;
+      border: none;
+      color: #a02330;
+      font-size: 0.8rem;
+      text-decoration: underline;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .btn-cancel-link:hover,
+    .btn-cancel-link:focus {
+      color: #7a1a24;
+    }
+
     #addressFormSection.d-none,
     #confirmSection.d-none {
       display: none !important;
@@ -268,12 +283,58 @@
           Pago por evento · Sin letra pequeña · Un operador confirma tu pago antes de despachar
         </p>
 
+        <div class="text-center mt-2">
+          <button type="button" class="btn-cancel-link" id="cancelBtn">Cancelar solicitud</button>
+        </div>
+
       </div>
     </main>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Comando "cancelar", disponible desde Dirección en adelante (ver
+    // DOCS/FRD-2.md, 3.2.3). Aquí (antes de pago.html) todavía no existe
+    // ninguna fila en Supabase, así que solo limpia el estado local; la
+    // llamada a la API es un best-effort por si el usuario ya viene de
+    // vuelta con una solicitud "pendiente" a su nombre.
+    function getStoredTelefono() {
+      try {
+        return localStorage.getItem('rs_telefono') || '';
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function clearFlowState() {
+      try {
+        localStorage.removeItem('rs_selected_service');
+        localStorage.removeItem('rs_address');
+        localStorage.removeItem('rs_telefono');
+        localStorage.removeItem('rs_folio');
+      } catch (e) {
+        // localStorage no disponible: no hay nada que limpiar
+      }
+    }
+
+    document.getElementById('cancelBtn').addEventListener('click', function () {
+      if (!window.confirm('¿Seguro que quieres cancelar tu solicitud?')) { return; }
+
+      var telefono = getStoredTelefono();
+      if (telefono) {
+        fetch('/api/cancel-solicitud', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telefono: telefono })
+        }).catch(function () {
+          // Sin conexión o error del servidor: no bloquea la cancelación local
+        });
+      }
+
+      clearFlowState();
+      window.location.href = 'index.html';
+    });
+
     var addressFormSection = document.getElementById('addressFormSection');
     var confirmSection = document.getElementById('confirmSection');
     var addressForm = document.getElementById('addressForm');

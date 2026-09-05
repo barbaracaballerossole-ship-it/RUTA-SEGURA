@@ -23,7 +23,8 @@ export default async function handler(req, res) {
       servicio,
       direccion,
       banco: banco ?? null,
-      numero_transaccion: numero_transaccion ?? null
+      numero_transaccion: numero_transaccion ?? null,
+      estado: 'pendiente'
     };
 
     const endpoint = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/solicitudes_servicio';
