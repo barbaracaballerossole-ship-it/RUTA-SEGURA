@@ -30,3 +30,9 @@ El prototipo simula la conversación de WhatsApp dentro de un mockup de teléfon
 ## Stack
 
 HTML, CSS y JavaScript planos, leyendo un archivo JSON local (`services.json`), estilizados con Bootstrap 5 vía CDN. Sin framework, sin npm, sin build step.
+# Producto en vivo
+🔗 https://ruta-segura-chi.vercel.app
+
+## Consola de operador (backoffice)
+🔗 https://ruta-segura-chi.vercel.app/operador-9714619.html
+(No enlazada desde el producto público — se accede solo con esta dirección)
