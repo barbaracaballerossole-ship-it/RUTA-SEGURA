@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Ruta Segura — Operador</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    /* Herramienta interna: mismos colores de marca, sin el mockup de
+       teléfono ni la estética de chat del producto de cliente. */
+    :root {
+      --rs-primary: #0B3954;
+      --rs-accent: #087E8B;
+      --rs-bg: #F7F7F2;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--rs-bg);
+      color: var(--rs-primary);
+      padding: 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      color: #6b7a84;
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .table-card {
+      background: #fff;
+      border: 1px solid rgba(11, 57, 84, 0.12);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    table {
+      margin-bottom: 0;
+    }
+
+    th {
+      background: var(--rs-primary);
+      color: #fff;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    td {
+      font-size: 0.85rem;
+      vertical-align: middle;
+    }
+
+    .folio-cell {
+      font-weight: 700;
+      color: var(--rs-accent);
+      white-space: nowrap;
+    }
+
+    .btn-confirmar {
+      background-color: var(--rs-accent);
+      border-color: var(--rs-accent);
+      color: #fff;
+    }
+
+    .btn-confirmar:hover,
+    .btn-confirmar:focus {
+      background-color: #066b76;
+      border-color: #066b76;
+      color: #fff;
+    }
+
+    .btn-no-encontrado {
+      background-color: transparent;
+      border-color: #a02330;
+      color: #a02330;
+    }
+
+    .btn-no-encontrado:hover,
+    .btn-no-encontrado:focus {
+      background-color: #a02330;
+      color: #fff;
+    }
+
+    .action-btn {
+      font-size: 0.78rem;
+      padding: 0.3rem 0.6rem;
+      white-space: nowrap;
+    }
+
+    #statusMsg {
+      font-size: 0.85rem;
+    }
+
+    #emptyState {
+      padding: 2rem 1rem;
+      text-align: center;
+      color: #6b7a84;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Ruta Segura — Consola de operador</h1>
+  <p class="subtitle">Solicitudes con pago pendiente de confirmar. Se actualiza al recargar y después de cada acción.</p>
+
+  <div id="statusMsg" class="mb-3"></div>
+
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Teléfono</th>
+            <th>Servicio</th>
+            <th>Dirección</th>
+            <th>Banco</th>
+            <th>N° transacción</th>
+            <th>Folio</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="solicitudesBody"></tbody>
+      </table>
+    </div>
+    <div id="emptyState" class="d-none">No hay solicitudes pendientes de confirmar.</div>
+  </div>
+
+  <script>
+    var solicitudesBody = document.getElementById('solicitudesBody');
+    var emptyState = document.getElementById('emptyState');
+    var statusMsg = document.getElementById('statusMsg');
+
+    function showStatus(message, isError) {
+      statusMsg.textContent = message || '';
+      statusMsg.className = message ? (isError ? 'mb-3 text-danger' : 'mb-3 text-muted') : 'mb-3';
+    }
+
+    function escapeHtml(value) {
+      var div = document.createElement('div');
+      div.textContent = value == null ? '' : String(value);
+      return div.innerHTML;
+    }
+
+    function renderRow(item) {
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + escapeHtml(item.telefono) + '</td>' +
+        '<td>' + escapeHtml(item.servicio) + '</td>' +
+        '<td>' + escapeHtml(item.direccion) + '</td>' +
+        '<td>' + escapeHtml(item.banco) + '</td>' +
+        '<td>' + escapeHtml(item.numero_transaccion) + '</td>' +
+        '<td class="folio-cell">' + escapeHtml(item.folio) + '</td>' +
+        '<td></td>';
+
+      var actionsCell = tr.lastElementChild;
+
+      var confirmBtn = document.createElement('button');
+      confirmBtn.type = 'button';
+      confirmBtn.className = 'btn btn-confirmar action-btn me-2';
+      confirmBtn.textContent = 'Confirmar pago';
+      confirmBtn.addEventListener('click', function () {
+        actualizarEstado(item.id, 'confirmado', [confirmBtn, notFoundBtn]);
+      });
+
+      var notFoundBtn = document.createElement('button');
+      notFoundBtn.type = 'button';
+      notFoundBtn.className = 'btn btn-no-encontrado action-btn';
+      notFoundBtn.textContent = 'No encontrado';
+      notFoundBtn.addEventListener('click', function () {
+        actualizarEstado(item.id, 'pago_no_encontrado', [confirmBtn, notFoundBtn]);
+      });
+
+      actionsCell.appendChild(confirmBtn);
+      actionsCell.appendChild(notFoundBtn);
+
+      return tr;
+    }
+
+    async function cargarSolicitudes() {
+      showStatus('Cargando…', false);
+
+      try {
+        var res = await fetch('/api/operador', { method: 'GET' });
+        var data = await res.json().catch(function () { return {}; });
+
+        if (!res.ok) {
+          showStatus(data && data.error ? JSON.stringify(data.error) : 'No pudimos cargar las solicitudes.', true);
+          return;
+        }
+
+        var rows = (data && data.data) || [];
+        solicitudesBody.innerHTML = '';
+
+        if (rows.length === 0) {
+          emptyState.classList.remove('d-none');
+        } else {
+          emptyState.classList.add('d-none');
+          rows.forEach(function (item) {
+            solicitudesBody.appendChild(renderRow(item));
+          });
+        }
+
+        showStatus('', false);
+      } catch (err) {
+        showStatus(err && err.message ? err.message : String(err), true);
+      }
+    }
+
+    async function actualizarEstado(id, nuevoEstado, buttonsToDisable) {
+      buttonsToDisable.forEach(function (btn) { btn.disabled = true; });
+      showStatus('Actualizando…', false);
+
+      try {
+        var res = await fetch('/api/operador', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id, nuevoEstado: nuevoEstado })
+        });
+        var data = await res.json().catch(function () { return {}; });
+
+        if (!res.ok) {
+          showStatus(data && data.error ? JSON.stringify(data.error) : 'No pudimos actualizar la solicitud.', true);
+          buttonsToDisable.forEach(function (btn) { btn.disabled = false; });
+          return;
+        }
+
+        await cargarSolicitudes();
+      } catch (err) {
+        showStatus(err && err.message ? err.message : String(err), true);
+        buttonsToDisable.forEach(function (btn) { btn.disabled = false; });
+      }
+    }
+
+    cargarSolicitudes();
+  </script>
+</body>
+</html>
