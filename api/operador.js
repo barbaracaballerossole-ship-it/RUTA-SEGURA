@@ -1,22 +1,22 @@
 // api/operador.js — backoffice interno (consola de operador).
 // Distinta de las demás funciones de esta carpeta: es CommonJS (.js, no
 // .mjs — el proyecto no tiene package.json, así que un .js aquí se
-// interpreta como CommonJS) y usa SUPABASE_SERVICE_ROLE_KEY en vez de
-// SUPABASE_SERVICE_KEY. Mismo manejo de errores que el resto de api/*.
+// interpreta como CommonJS). Usa SUPABASE_SERVICE_KEY, la misma variable
+// que api/submit-solicitud.mjs. Mismo manejo de errores que el resto de api/*.
 const ESTADOS_VALIDOS = ['confirmado', 'pago_no_encontrado'];
 
 module.exports = async function handler(req, res) {
   const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return res.status(500).json({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables' });
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+    return res.status(500).json({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables' });
   }
 
   const baseHeaders = {
     'Content-Type': 'application/json',
-    apikey: SUPABASE_SERVICE_ROLE_KEY,
-    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+    apikey: SUPABASE_SERVICE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`
   };
 
   try {
