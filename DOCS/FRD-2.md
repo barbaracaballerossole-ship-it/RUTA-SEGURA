@@ -116,3 +116,41 @@ bloquear el resto del flujo.
    (número de transacción o captura del comprobante) antes de poder mover
    el caso a "Confirmado"; sin esa referencia, el sistema no permite avanzar
    a la Pantalla 5.
+## Anexo — Arquitectura de Delivery 4 (7 de septiembre de 2026)
+
+A partir de D4, el flujo deja de insertar directamente a Supabase desde el
+navegador (como en D3) y pasa por funciones serverless propias desplegadas
+en Vercel, cada una con su llave secreta guardada únicamente como variable
+de entorno del servidor.
+
+### Transacción del cliente
+La Pantalla 4 (Cobro y confirmación de pago) llama a `POST /api/submit-solicitud`.
+Esa función usa `SUPABASE_SERVICE_KEY` (llave de rol de servicio, nunca
+expuesta al navegador) para insertar la fila en `solicitudes_servicio`,
+generar el folio (`RS-XXXXXXXX`) y devolverlo al cliente junto con el
+estado inicial `pendiente`. La política de `INSERT` para el rol `anon`
+fue eliminada de la tabla: el navegador ya no tiene permiso de escritura
+directa, solo la función con la llave de servicio puede insertar.
+
+### Chatbot fundamentado
+Un widget de chat flotante, visible en todas las pantallas del producto,
+llama a `POST /api/chatbot`. Esa función usa `ANTHROPIC_API_KEY` (también
+solo en el servidor) para llamar al modelo Claude, con un system prompt
+que contiene la información real del venture: los 4 servicios y precios
+fijos, la política de pago por evento sin pasarela conectada, el flujo de
+comprobante cuando el operador no encuentra el pago, y el comando
+"cancelar". El modelo responde solo con esa información.
+
+### Consola de operador (backoffice)
+Página `operador-9714619.html`, sin enlace desde el producto público,
+que llama a una segunda función serverless distinta, `api/operador.js`
+(misma llave de servicio). Lista las solicitudes con `estado = pendiente`
+y permite al operador cambiar el estado a `confirmado` o
+`pago_no_encontrado` — el equivalente digital de la consola descrita en
+la Sección 4 del PRD original.
+
+### Tercera transacción (cancelación)
+`api/cancel-solicitud.mjs` implementa el comando "cancelar" descrito en
+la sección 3.2.3 de este documento, cambiando el estado de una solicitud
+a `cancelacion_solicitada`. Construida en la misma arquitectura, pendiente
+de validación con evidencia en vivo al momento de este anexo.
